@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/AlleyWatch.Core/AlleyWatch.Core.csproj" />
+    <Project Path="src/AlleyWatch.Worker/AlleyWatch.Worker.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/AlleyWatch.Tests/AlleyWatch.Tests.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,28 @@
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: alleywatch-mosquitto
+    restart: unless-stopped
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+    ports:
+      - "1883:1883"   # published to localhost so the .NET Worker (running outside Docker) can subscribe
+
+  frigate:
+    image: ghcr.io/blakeblackshear/frigate:stable
+    container_name: alleywatch-frigate
+    restart: unless-stopped
+    privileged: false
+    shm_size: "192mb"   # Frigate reported the 128mb default was short (needs >=146mb at current 1280x720/5fps,
+                         # 1-camera config); bumped with some headroom for config changes
+    depends_on:
+      - mosquitto
+    env_file:
+      - .env   # FRIGATE_RTSP_USER / FRIGATE_RTSP_PASSWORD — gitignored, see .env.example
+    volumes:
+      - ./frigate/config.yml:/config/config.yml:ro
+      - ./frigate/media:/media/frigate   # snapshots/clips storage — gitignored
+    ports:
+      - "8971:8971"
+      - "5000:5000"   # Frigate web UI + REST API
+      - "8554:8554"   # RTSP restream (go2rtc), optional but useful for previewing the detect stream directly

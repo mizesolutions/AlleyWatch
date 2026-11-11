@@ -1,0 +1,66 @@
+# AlleyWatch Frigate configuration.
+# Reference: https://docs.frigate.video/configuration/ (zones, cameras, mqtt)
+#
+# NOTE: the exact ffmpeg input flags Wyze Cam v3's RTSPS firmware needs (transport, TLS handling) may
+# require tuning — this is step 1 of the verification plan: bring the stack up and confirm the live feed
+# shows in Frigate's web UI before trusting anything downstream of it.
+
+mqtt:
+  host: mosquitto
+  port: 1883
+
+tls:
+  enabled: true
+
+detectors:
+  cpu1:
+    type: cpu   # fine for one low-traffic camera; revisit (Coral/OpenVINO) only if detection lags in practice
+
+cameras:
+  alley:
+    ffmpeg:
+      inputs:
+        - path: rtsps://{FRIGATE_RTSP_USER}:{FRIGATE_RTSP_PASSWORD}@{FRIGATE_CAMERA_HOST}:322/stream0
+          input_args: preset-rtsp-restream   # tune if the Wyze v3 RTSPS stream needs different transport flags
+          roles:
+            - detect
+      # No `record` role by default — AlleyWatch relies on MQTT events + snapshots, not Frigate's own
+      # long-term clip storage, so recording stays off to save disk. Add a second input with
+      # roles: [record] later if you want Frigate's own video history too.
+    detect:
+      enabled: true   # explicit: Frigate persists a runtime on/off toggle across restarts, so leaving this
+                       # unset let a stale "off" state from an earlier invalid-config boot silently survive
+      width: 1280   # match to the camera's actual detect-stream resolution
+      height: 720
+      fps: 5
+    objects:
+      track:
+        - car
+        - motorcycle
+        - bus
+        - truck
+        - person
+    zones:
+      alley_zone:
+        # Placeholder — replace with the polygon drawn in Frigate's web UI zone editor (Settings > Masks
+        # & Zones) after the stack is up and the live feed is visible. Coordinates are normalized 0-1.
+        # Named "alley_zone" (not "alley") because Frigate rejects a zone sharing its camera's name.
+        coordinates: 0.152,0,0.33,0,0.549,0.192,0.811,0.493,1,0.788,0.989,1,0.237,1,0.164,0.495
+        objects:
+          - car
+          - motorcycle
+          - bus
+          - truck
+        # loitering_time intentionally left unset. AlleyWatch's own ParkedThresholdMinutes (in the
+        # Worker's appsettings.json) is the single source of truth for "how long counts as parked" —
+        # keeping it out of this file means changing the threshold never requires touching Docker config.
+
+# Snapshots on, clips off by default — AlleyWatch consumes snapshot JPEGs via MQTT/API; clip storage is
+# optional extra disk spend, not required for the report pipeline.
+snapshots:
+  enabled: true
+  retain:
+    default: 3   # days; local disk is cheap but not infinite — tune as needed
+
+record:
+  enabled: false

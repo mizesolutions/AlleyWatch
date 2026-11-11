@@ -1,0 +1,22 @@
+# .NET
+bin/
+obj/
+*.user
+
+# AlleyWatch runtime data (SQLite db, Gmail token, ffmpeg captures if any)
+data/
+
+# Local-only secret overrides
+appsettings.*.local.json
+docker/.env
+client_secret_*.json
+*.db
+
+# Frigate media (snapshots/clips) — regenerated at runtime, not source
+docker/frigate/media/*
+!docker/frigate/media/.gitkeep
+
+# IDE
+.vs/
+.vscode/
+*.slnx.user
