@@ -1,13 +1,14 @@
 # AlleyWatch
 
-Watches a Wyze Cam v3 alley feed via [Frigate](https://frigate.video) (Docker), and when a vehicle sits
-in the alley zone longer than a configurable threshold, asks Claude for a brief report (vehicle
-color/make/model, plate if legible, people getting in/out) and creates a Gmail **draft** — never sent
-automatically.
+I built this to watch an alley camera (Wyze Cam v3) through [Frigate](https://frigate.video) in
+Docker. When a vehicle sits in the alley zone longer than a set threshold, it asks Claude for a short
+report (vehicle color/make/model, plate if it can read it, people getting in or out) and creates a
+Gmail **draft**. Nothing gets sent automatically.
 
-> **Status: prototype.** Verification steps 1 through 4 below were completed against a live camera
-> feed; step 5 (an end-to-end dry run with a real parked vehicle) was in progress when the project was
-> shelved. The code builds and the unit tests pass.
+> **Status: prototype, shelved.** I got through verification steps 1 through 4 below against the live
+> camera feed. I shelved it during step 5 (an end-to-end dry run with a real parked vehicle) because
+> the quality of the transmitted video was too poor for it to be reliable. The code builds and the
+> unit tests pass.
 
 ## Architecture
 
@@ -29,7 +30,7 @@ flowchart LR
     gmail -. Gmail API .-> drafts[Gmail Drafts<br/>never auto-sent]
 ```
 
-Design choices worth noting:
+A few choices worth calling out:
 
 - **Frigate owns computer vision; the Worker owns business logic.** Using Frigate instead of a
   hand-rolled ONNX pipeline trades a Docker dependency for far less code to maintain.
